@@ -334,7 +334,7 @@ static BOOL _StringWithRangeIsProbablyObjC(NSString *string, NSRange blockRange)
 			}
 			NSRange thisLineRange = NSMakeRange(scanRange.location, lineEndRange.location - scanRange.location);
 			NSString *thisLine = [[self string] substringWithRange:thisLineRange];
-			if([thisLine hasPrefix:@"#"]) {
+			if([thisLine hasPrefix:@"# "] || [thisLine hasPrefix:@"## "] || [thisLine hasPrefix:@"### "] || [thisLine hasPrefix:@"#### "] || [thisLine hasPrefix:@"##### "] || [thisLine hasPrefix:@"###### "]) {
 				[self addAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:NSUnderlineStyleSingle],  NSUnderlineStyleAttributeName, [NSNull null], NVHiddenHeadingTagAttributeName, nil] range:NSMakeRange(thisLineRange.location, thisLineRange.length)];
 			} else if([self attribute:NVHiddenHeadingTagAttributeName existsInRange:thisLineRange]) {
 				[self removeAttribute:NVHiddenHeadingTagAttributeName range:thisLineRange];
