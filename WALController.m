@@ -46,13 +46,12 @@
     if ([super init]) {
 		logFD = -1;
 		
-		char filename[] = "Interim Note-Changes";
-		size_t newPathLength = sizeof(filename) + strlen(path) + 2;
+		size_t newPathLength = [NotesInterimFileName length] + strlen(path) + 2;
 		
 		journalFile = (char*)malloc(newPathLength);
 		strlcpy(journalFile, path, newPathLength);
 		strlcat(journalFile, "/", newPathLength);
-		strlcat(journalFile, filename, newPathLength);
+		strlcat(journalFile, [NotesInterimFileName UTF8String], newPathLength);
 		
 		//for simplicity's sake the log file is always compressed and encrypted with the key for the current database
 		//if the database has no encryption, it should have passed some constant known key to us instead

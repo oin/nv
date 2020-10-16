@@ -1055,10 +1055,16 @@ NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSString* serv
 	if ([filename characterAtIndex:0] == '.') {
 		return NO;
 	}
-	if ([filename isEqualToString:NotesDatabaseFileName]) {
+	if ([filename isEqualToString:@"Notes & Settings"]) {
 		return NO;
 	}
 	if ([filename isEqualToString:@"Interim Note-Changes"]) {
+		return NO;
+	}
+	if ([filename isEqualToString:NotesDatabaseFileName]) {
+		return NO;
+	}
+	if ([filename isEqualToString:NotesInterimFileName]) {
 		return NO;
 	}
 	

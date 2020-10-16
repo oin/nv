@@ -318,7 +318,7 @@ long BlockSizeForNotation(NotationController *controller) {
 		
 		if (!dbNote && [filenameOfNote(obj) isEqualToString:NotesDatabaseFileName])
 			dbNote = [[obj retain] autorelease];
-		if (!walNote && [filenameOfNote(obj) isEqualToString:@"Interim Note-Changes"])
+		if (!walNote && [filenameOfNote(obj) isEqualToString:NotesInterimFileName])
 			walNote = [[obj retain] autorelease];
 	}
 	if (dbNote) {

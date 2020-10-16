@@ -134,6 +134,19 @@
 		
 		noteDirectoryRef = *directoryRef;
 		
+		// To use different database and interim filenames, set the defaults in terminal; e.g.:
+		//		defaults write net.notational.velocity NotesDatabaseFileName ".nvDatabase-MacMini"
+		//		defaults write net.notational.velocity NotesInterimFileName ".nvInterim-MacMini"
+		
+		NSString *dbFilename = [[NSUserDefaults standardUserDefaults] stringForKey:@"NotesDatabaseFileName"];
+		if(dbFilename) {
+			NotesDatabaseFileName = [dbFilename copy];
+		}
+		NSString *interimFilename = [[NSUserDefaults standardUserDefaults] stringForKey:@"NotesInterimFileName"];
+		if(interimFilename) {
+			NotesInterimFileName = [interimFilename copy];
+		}
+		
 		//check writable and readable perms, warning user if necessary
 		
 		//first read cache file

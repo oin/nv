@@ -27,6 +27,8 @@
 #import "GlobalPrefs.h"
 #import "LabelObject.h"
 
+NSString *NotesInterimFileName = @"Interim Note-Changes";
+
 @implementation NSString (NV)
 
 static int dayFromAbsoluteTime(CFAbsoluteTime absTime);

@@ -23,6 +23,8 @@
 #import <Cocoa/Cocoa.h>
 @class NoteObject;
 
+extern NSString *NotesInterimFileName;
+
 @interface NSString (NV)
 
 unsigned int hoursFromAbsoluteTime(CFAbsoluteTime absTime);
