@@ -195,6 +195,8 @@ void outletObjectAwoke(id sender) {
 	}
 	
 	[NSApp setServicesProvider:self];
+	
+	[self updateWindowTitle];
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNote {
@@ -940,6 +942,8 @@ terminateApp:
 	
 	[currentNote release];
 	currentNote = [aNote retain];
+	
+	[self updateWindowTitle];
 }
 
 - (NoteObject*)selectedNoteObject {
@@ -1490,7 +1494,8 @@ terminateApp:
 
 - (void)_expandToolbar {
 	if (![toolbar isVisible]) {
-		[window setTitle:@"Notation"];
+		// [window setTitle:@"Notation"];
+		[self updateWindowTitle];
 		if (currentNote)
 			[field setStringValue:titleOfNote(currentNote)];
 		[window toggleToolbarShown:nil];
@@ -1787,6 +1792,21 @@ terminateApp:
 
 - (NSWindow*)window {
 	return window;
+}
+
+-(void)updateWindowTitle
+{
+	if(![toolbar isVisible]) return; //TODO: Support non-toolbar mode too
+	
+	NSString *title = nil;
+	NSString *filename = nil;
+	if(currentNote) {
+		title = titleOfNote(currentNote);
+		filename = [currentNote noteFilePath];
+	}
+	
+	[window setTitle:title ?: @"Notation"];
+	[window setRepresentedFilename:filename ?: @""];
 }
 
 @end
