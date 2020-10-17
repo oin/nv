@@ -78,7 +78,8 @@ CGFloat _perceptualDarkness(NSColor*a);
 	 @selector(setBackgroundTextColor:sender:),
 	 @selector(setForegroundTextColor:sender:), nil];	
 	
-	[self setTextContainerInset:NSMakeSize(3, 8)];
+//	[self setTextContainerInset:NSMakeSize(3, 8)];
+	[self setTextContainerInset:NSMakeSize(16, 16)];
 	[self setSmartInsertDeleteEnabled:NO];
 	[self setUsesRuler:NO];
 	[self setUsesFontPanel:NO];
@@ -105,7 +106,8 @@ CGFloat _perceptualDarkness(NSColor*a);
 }
 
 - (void)settingChangedForSelectorString:(NSString*)selectorString {
-    
+	BOOL shouldReformat = NO;
+	
     if ([selectorString isEqualToString:SEL_STR(setCheckSpellingAsYouType:sender:)]) {
 	
 		[self setContinuousSpellCheckingEnabled:[prefsController checkSpellingAsYouType]];
@@ -118,6 +120,7 @@ CGFloat _perceptualDarkness(NSColor*a);
     } else if ([selectorString isEqualToString:SEL_STR(setNoteBodyFont:sender:)]) {
 
 		[self setTypingAttributes:[prefsController noteBodyAttributes]];
+		shouldReformat = YES;
 		//[textView setFont:[prefsController noteBodyFont]];
 	} else if ([selectorString isEqualToString:SEL_STR(setMakeURLsClickable:sender:)]) {
 		
@@ -128,11 +131,13 @@ CGFloat _perceptualDarkness(NSColor*a);
 		//link-color is derived both from foreground and background colors
 		[self setBackgroundColor:[prefsController backgroundTextColor]];
 		[self updateTextColors];
+		shouldReformat = YES;
 		
 	} else if ([selectorString isEqualToString:SEL_STR(setForegroundTextColor:sender:)]) {
 		
 		[self updateTextColors];
 		[self setTypingAttributes:[prefsController noteBodyAttributes]];
+		shouldReformat = YES;
 		
 	} else if ([selectorString isEqualToString:SEL_STR(setSearchTermHighlightColor:sender:)] || 
 			   [selectorString isEqualToString:SEL_STR(setShouldHighlightSearchTerms:sender:)]) {
@@ -144,6 +149,12 @@ CGFloat _perceptualDarkness(NSColor*a);
 			if (typedString)
 				[self highlightTermsTemporarilyReturningFirstRange:typedString avoidHighlight:NO];
 		}
+	}
+	
+	if(shouldReformat) {
+		changedRange = NSMakeRange(0, [[self textStorage] length]);
+		[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(didChangeText) object:nil];
+		[self performSelector:@selector(didChangeText) withObject:nil afterDelay:0.2];
 	}
 }
 
@@ -1207,7 +1218,7 @@ cancelCompetion:
 	[[self textStorage] addLinkAttributesForRange:changedRange];
 	
 	[[self textStorage] addStrikethroughNearDoneTagsForRange:changedRange];
-	[[self textStorage] addAttributesForMarkdownHeadingLinesInRange:changedRange];
+	[[self textStorage] addAttributesForMarkdownInRange:changedRange];
 	
 	if (!isAutocompleting && !wasDeleting && [prefsController linksAutoSuggested] && 
 		![[self undoManager] isUndoing] && ![[self undoManager] isRedoing]) {

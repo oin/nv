@@ -126,7 +126,7 @@ static BOOL _StringWithRangeIsProbablyObjC(NSString *string, NSRange blockRange)
 	[self restyleTextToFont:[[GlobalPrefs defaultPrefs] noteBodyFont] usingBaseFont:nil];
 	[self addLinkAttributesForRange:range];
 	[self addStrikethroughNearDoneTagsForRange:range];
-	[self addAttributesForMarkdownHeadingLinesInRange:range];
+	[self addAttributesForMarkdownInRange:range];
 }
 
 - (BOOL)restyleTextToFont:(NSFont*)currentFont usingBaseFont:(NSFont*)baseFont {
@@ -321,8 +321,18 @@ static BOOL _StringWithRangeIsProbablyObjC(NSString *string, NSRange blockRange)
 
 -(void)addAttributesForMarkdownHeadingLinesInRange:(NSRange)changedRange
 {
-	if(![[GlobalPrefs defaultPrefs] autoFormatsMarkdownHeadings])
-		return;
+	NSFontManager *fontManager = [NSFontManager sharedFontManager];
+	NSFont *font = [[GlobalPrefs defaultPrefs] noteBodyFont];
+	NSFont *fontH1 = [fontManager convertFont:font toSize:[font pointSize] * 1.25f];
+	NSFont *fontH2 = [fontManager convertFont:font toSize:[font pointSize] * 1.15f];
+	NSColor *backgroundColor = [[GlobalPrefs defaultPrefs] backgroundTextColor];
+	NSColor *foregroundColor = [[GlobalPrefs defaultPrefs] foregroundTextColor];
+	NSColor *colorH1 = [[NSColor colorWithCalibratedRed:0.68 green:0.64 blue:0.54 alpha:1.f] blendedColorWithFraction:0.5f ofColor:backgroundColor];
+	NSColor *colorH2 = [[NSColor colorWithCalibratedRed:0.91 green:0.85 blue:0.17 alpha:1.f] blendedColorWithFraction:0.5f ofColor:backgroundColor];
+	NSColor *colorH3 = [[NSColor colorWithCalibratedRed:0.60 green:1.00 blue:0.26 alpha:1.f] blendedColorWithFraction:0.5f ofColor:backgroundColor];
+	NSColor *colorH4 = [[NSColor colorWithCalibratedRed:0.85 green:0.57 blue:0.61 alpha:1.f] blendedColorWithFraction:0.5f ofColor:backgroundColor];
+	NSColor *colorH5 = [[NSColor colorWithCalibratedRed:0.47 green:0.82 blue:0.79 alpha:1.f] blendedColorWithFraction:0.5f ofColor:backgroundColor];
+	NSColor *colorH6 = [[NSColor colorWithCalibratedRed:0.56 green:0.90 blue:0.83 alpha:1.f] blendedColorWithFraction:0.5f ofColor:backgroundColor];
 	
 	NSCharacterSet *newlineSet = [NSCharacterSet newlineCharacterSet];
 	NSRange lineEndRange, scanRange = changedRange;
@@ -333,12 +343,88 @@ static BOOL _StringWithRangeIsProbablyObjC(NSString *string, NSRange blockRange)
 				lineEndRange = NSMakeRange(NSMaxRange(scanRange), 1);
 			}
 			NSRange thisLineRange = NSMakeRange(scanRange.location, lineEndRange.location - scanRange.location);
-			NSString *thisLine = [[self string] substringWithRange:thisLineRange];
-			if([thisLine hasPrefix:@"# "] || [thisLine hasPrefix:@"## "] || [thisLine hasPrefix:@"### "] || [thisLine hasPrefix:@"#### "] || [thisLine hasPrefix:@"##### "] || [thisLine hasPrefix:@"###### "]) {
-				[self addAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:NSUnderlineStyleSingle],  NSUnderlineStyleAttributeName, [NSNull null], NVHiddenHeadingTagAttributeName, nil] range:NSMakeRange(thisLineRange.location, thisLineRange.length)];
-			} else if([self attribute:NVHiddenHeadingTagAttributeName existsInRange:thisLineRange]) {
-				[self removeAttribute:NVHiddenHeadingTagAttributeName range:thisLineRange];
-				[self removeAttribute:NSUnderlineStyleAttributeName range:thisLineRange];
+			if(thisLineRange.length) {
+				// Check whether the line starts with an ATX-style heading marker
+				NSString *thisLine = [[self string] substringWithRange:thisLineRange];
+				NSUInteger headingLevel = 0;
+				BOOL ok = NO;
+				for(unsigned i=0; i<thisLineRange.length; ++i) {
+					unichar c = [thisLine characterAtIndex:i];
+					if(c == '#') {
+						++headingLevel;
+					} else {
+						if(![[NSCharacterSet whitespaceCharacterSet] characterIsMember:c]) {
+							headingLevel = 0;
+						} else {
+							ok = YES;
+						}
+						break;
+					}
+				}
+				if(ok && headingLevel > 0) {
+					[self removeAttribute:NSUnderlineStyleAttributeName range:thisLineRange];
+					[self removeAttribute:NSForegroundColorAttributeName range:thisLineRange];
+					[self removeAttribute:NSBackgroundColorAttributeName range:thisLineRange];
+					[self removeAttribute:NSFontAttributeName range:thisLineRange];
+					
+					NSRange titleRange = NSMakeRange(thisLineRange.location + headingLevel + 1, thisLineRange.length - (headingLevel + 1));
+					
+					// Style the title
+					NSColor *headingBackgroundColor = backgroundColor;
+					NSColor *headingForegroundColor = foregroundColor;
+					switch(headingLevel) {
+						case 1:
+							[self addAttributes:[NSDictionary dictionaryWithObjectsAndKeys:fontH1, NSFontAttributeName, nil] range:thisLineRange];
+							headingBackgroundColor = colorH1;
+							[self applyFontTraits:NSFontBoldTrait range:titleRange];
+							break;
+						case 2:
+							[self addAttributes:[NSDictionary dictionaryWithObjectsAndKeys:fontH2, NSFontAttributeName, nil] range:thisLineRange];
+							headingBackgroundColor = colorH2;
+							[self applyFontTraits:NSFontBoldTrait range:titleRange];
+							break;
+						case 3:
+							[self applyFontTraits:NSFontBoldTrait range:titleRange];
+							[self applyFontTraits:NSFontItalicTrait range:titleRange];
+							headingBackgroundColor = colorH3;
+							break;
+						case 4:
+							[self applyFontTraits:NSFontBoldTrait range:titleRange];
+							headingBackgroundColor = colorH4;
+							break;
+						case 5:
+							headingBackgroundColor = colorH5;
+							break;
+						case 6:
+							headingBackgroundColor = colorH6;
+							break;
+						case 7:
+							[self addAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:NSUnderlineStyleSingle],  NSUnderlineStyleAttributeName, nil] range:titleRange];
+							break;
+						default:
+							break;
+					}
+					if(headingForegroundColor) {
+						[self addAttributes:[NSDictionary dictionaryWithObjectsAndKeys:headingForegroundColor, NSForegroundColorAttributeName, nil] range:titleRange];
+					}
+					if(headingBackgroundColor) {
+						[self addAttributes:[NSDictionary dictionaryWithObjectsAndKeys:headingBackgroundColor, NSBackgroundColorAttributeName, nil] range:thisLineRange];
+					}
+					
+					// Color the hashtags
+					NSColor *hashColor = [foregroundColor blendedColorWithFraction:0.65f ofColor:headingBackgroundColor];
+					[self addAttributes:[NSDictionary dictionaryWithObjectsAndKeys:hashColor, NSForegroundColorAttributeName, nil] range:NSMakeRange(thisLineRange.location, headingLevel)];
+					
+					// And don't forget to set the hidden attribute to ensure all this mess can be removed
+					[self addAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[NSNull null], NVHiddenHeadingTagAttributeName, nil] range:titleRange];
+				} else if([self attribute:NVHiddenHeadingTagAttributeName existsInRange:thisLineRange]) {
+					[self removeAttribute:NVHiddenHeadingTagAttributeName range:thisLineRange];
+					[self removeAttribute:NSUnderlineStyleAttributeName range:thisLineRange];
+					[self removeAttribute:NSForegroundColorAttributeName range:thisLineRange];
+					[self removeAttribute:NSBackgroundColorAttributeName range:thisLineRange];
+					[self removeAttribute:NSFontAttributeName range:thisLineRange];
+				}
+				
 			}
 			scanRange = NSMakeRange(NSMaxRange(thisLineRange), changedRange.length - (NSMaxRange(thisLineRange) - changedRange.location));
 			if(scanRange.length > 0) {
@@ -350,6 +436,15 @@ static BOOL _StringWithRangeIsProbablyObjC(NSString *string, NSRange blockRange)
 	} @catch (NSException *e) {
 		NSLog(@"_%s(%@): %@", _cmd, NSStringFromRange(changedRange), e);
 	}
+}
+
+-(void)addAttributesForMarkdownInRange:(NSRange)changedRange
+{
+	if(![[GlobalPrefs defaultPrefs] autoFormatsMarkdown]) {
+		return;
+	}
+		
+	[self addAttributesForMarkdownHeadingLinesInRange:changedRange];
 }
 
 - (void)addStrikethroughNearDoneTagsForRange:(NSRange)changedRange {

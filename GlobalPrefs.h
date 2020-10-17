@@ -126,6 +126,8 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2);
 - (void)setAutoFormatsDoneTag:(BOOL)value sender:(id)sender;
 - (BOOL)autoFormatsDoneTag;
 
+- (BOOL)autoFormatsMarkdown;
+
 - (BOOL)autoIndentsNewLines;
 - (void)setAutoIndentsNewLines:(BOOL)value sender:(id)sender;
 
