@@ -1000,9 +1000,9 @@ bail:
 		
 		[unwrittenNotes addObject:note];
 		
-		//always synchronize absolutely no matter what 15 seconds after any change
+		//always synchronize absolutely no matter what 5 seconds after any change
 		if (!changeWritingTimer)
-			changeWritingTimer = [[NSTimer scheduledTimerWithTimeInterval:(immediately ? 0.0 : 15.0) target:self 
+			changeWritingTimer = [[NSTimer scheduledTimerWithTimeInterval:(immediately ? 0.0 : 5.0) target:self
 									 selector:@selector(synchronizeNoteChanges:)
 									 userInfo:nil repeats:NO] retain];
 		
@@ -1014,13 +1014,13 @@ bail:
 			//perhaps a more general user interface activity timer would be better for this? update process syncs every 30 secs, anyway...
 			[NSObject cancelPreviousPerformRequestsWithTarget:walWriter selector:@selector(synchronize) object:nil];
 			//fsyncing WAL to disk can cause noticeable interruption when run from main thread
-			[walWriter performSelector:@selector(synchronize) withObject:nil afterDelay:15.0];
+			[walWriter performSelector:@selector(synchronize) withObject:nil afterDelay:5.0];
 		}
 		
 		if (!immediately) {
 			//timer is already scheduled if immediately is true
-			//queue to write 2.7 seconds after last user change; 
-			[self performSelector:@selector(synchronizeNoteChanges:) withObject:nil afterDelay:2.7];
+			//queue to write 1.7 seconds after last user change; 
+			[self performSelector:@selector(synchronizeNoteChanges:) withObject:nil afterDelay:1.7];
 		}
 	} else {
 		NSLog(@"not writing note %@ because it is not controlled by NoteController", note);
